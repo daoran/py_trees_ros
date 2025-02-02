@@ -58,7 +58,7 @@ class FromBlackboard(py_trees.behaviour.Behaviour):
             name="WaitForGoal",
             variable_name="/my_goal"
         )
-        action_client = py_trees_ros.aciton_clients.FromBlackboard(
+        action_client = py_trees_ros.action_clients.FromBlackboard(
             action_type=py_trees_actions.Dock,
             action_name="dock",
             name="ActionClient"
@@ -153,6 +153,8 @@ class FromBlackboard(py_trees.behaviour.Behaviour):
         result = None
         if self.wait_for_server_timeout_sec > 0.0:
             result = self.action_client.wait_for_server(timeout_sec=self.wait_for_server_timeout_sec)
+        elif self.wait_for_server_timeout_sec == 0.0:
+            result = True # don't wait and don't check if the server is ready
         else:
             iterations = 0
             period_sec = -1.0*self.wait_for_server_timeout_sec
@@ -214,7 +216,7 @@ class FromBlackboard(py_trees.behaviour.Behaviour):
             # goal was rejected
             self.feedback_message = "goal rejected"
             return py_trees.common.Status.FAILURE
-        if self.result_status is None:
+        if self.result_status is None or self.get_result_future is None:
             return py_trees.common.Status.RUNNING
         elif not self.get_result_future.done():
             # should never get here
